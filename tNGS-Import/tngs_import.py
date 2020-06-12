@@ -4,16 +4,17 @@ from datetime import datetime
 
 class Import():
 
-    def __init__(self, regexFile, seqLoadFile):
+    def __init__(self, regexFile, seqLoadFile, outDir):
         self.regexFile = regexFile
         self.seqLoadFile = seqLoadFile
+        self.outDir = outDir
         self.theDate = datetime.now().strftime("%Y%m%d-%H%M%S")
 
         self.runPandas()
 
     def runPandas(self):
         tngs = pd.read_csv(self.regexFile)
-        seq = pd.read_csv(self.seqLoadFile) #delimiter="\t")
+        seq = pd.read_csv(self.seqLoadFile, delimiter="\t")
 
         seq.columns = [c.replace(' ', '_') for c in seq.columns]
         tngs.columns = [c.replace(' ', '_') for c in tngs.columns]
@@ -59,7 +60,7 @@ class Import():
 
         # create custom report template
         def create_custom_report():
-            f = open(f'{os.getcwd()}/../../output/custom_report' + self.theDate + '.txt', 'w+')
+            f = open(f'{self.outDir}Starlims_custom_report_{self.theDate}.txt', 'w+')
             header = "Warning!\nSample Name\tReference Name\tLane Quality\tROI Coverage\t#nts below threshold\tQuality ROI\tVariant1\tVariant3\tVariant3\tVariant4\n"
             body = ""
             for sample in sample_vars:
@@ -113,21 +114,26 @@ class Import():
 
         # create variant_details import
         def create_variant_import():
-            f = open(f'{os.getcwd()}/../../output/variant_import' + self.theDate + '.csv', 'w+')
+            f = open(f'{self.outDir}Starlims_variant_details_{self.theDate}.csv', 'w+')
             header = "Well,Sample,Variant1,Genomic1,Variant2,Genomic2,Variant3,Genomic3\n"
             body = ""
             for sample in seq_mut:
                 no_vars = len(seq_mut[sample][1])
-                if len(seq_mut[sample][2]) == 0:
-                    body += f"{seq_mut[sample][0][0]},{sample},,,,,,\n"
-                elif no_vars == 1:
-                    body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},,,,\n"
-                elif no_vars == 2:
-                    body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},{seq_mut[sample][1][1]},{seq_mut[sample][2][1]},,\n"
-                elif no_vars == 3:
-                    body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},{seq_mut[sample][1][1]},{seq_mut[sample][2][1]},{seq_mut[sample][1][2]},{seq_mut[sample][2][2]}\n"
-                else:
-                    body += f"{seq_mut[sample][0][0]},{sample},,,,,,\n"
+                try:
+                    if len(seq_mut[sample][2]) == 0:
+                        body += f"{seq_mut[sample][0][0]},{sample},,,,,,\n"
+                    elif no_vars == 1:
+                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},,,,\n"
+                    elif no_vars == 2:
+                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},{seq_mut[sample][1][1]},{seq_mut[sample][2][1]},,\n"
+                    elif no_vars == 3:
+                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},{seq_mut[sample][1][1]},{seq_mut[sample][2][1]},{seq_mut[sample][1][2]},{seq_mut[sample][2][2]}\n"
+                    else:
+                        body += f"{seq_mut[sample][0][0]},{sample},,,,,,\n"
+                except:
+                    self.variant_error = "Variant error"
+                    pass
+                    
             f.write(header)
             f.write(body)
             f.close()

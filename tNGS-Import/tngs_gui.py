@@ -4,6 +4,7 @@ from PyQt5 import QtCore
 from tngs_regex import VariantRegex
 from tngs_import import Import
 import sys
+import os
 
 class Window(QDialog):
 
@@ -104,10 +105,24 @@ class Window(QDialog):
         self.txt_ngsPath.setText("")
         self.txt_starPath.setText("")
         self.setStyleSheet(f"background-color: none;")
+        self.msgbox("Information", "Form reset")
 
     def run(self):
-        regex = VariantRegex(self.txt_ngsPath.text(),'../../output/')
-        imp = Import(regex.fullExportPath,self.txt_starPath.text())
+        self.msgbox("Information", "Processing...")
+        cwd = os.path.split(os.path.abspath(self.txt_ngsPath.text()))[0]
+        outDir = cwd + "\\tNGS Import Files\\"
+
+        try:
+            regex = VariantRegex(self.txt_ngsPath.text(), outDir)
+        except:
+            self.msgbox("Error", "Something went wrong generating the custom report")
+            pass
+
+        try:
+            imp = Import(regex.fullExportPath,self.txt_starPath.text(),outDir)
+        except:
+            self.msgbox("Error", "Something went wrong generating the variant details file")
+            self.reset_form()
 
     def exit(self):
         sys.exit()
@@ -116,14 +131,9 @@ class Window(QDialog):
         colours = ['mediumseagreen', 'cadetblue', 'lightcoral', 'khaki']
         self.setStyleSheet(f"background-color: {colours[int(self.dial.value()/25)]};")
 
-    def msgbox_info(self, title, text):
+    def msgbox(self, title, text):
         msg = QMessageBox()
         msg.setWindowTitle(title)
         msg.setText(text)
 
         x = msg.exec_()  # this will show our messagebox
-
-# def main():
-#     app = QApplication(sys.argv)
-#     window = Window()
-#     sys.exit(app.exec_())
