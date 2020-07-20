@@ -89,7 +89,6 @@ class Import():
         for w, s in zip(well, seqID):
             well_sample[w] = s
 
-
         # new seq dictionary, nested lists with mutdetails and genomic nomenclature
         seq_mut = {k:[[],[],[]] for k in seqID}
         for sample in seqID:

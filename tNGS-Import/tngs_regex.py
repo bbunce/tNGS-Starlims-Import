@@ -9,7 +9,12 @@ class VariantRegex():
     def __init__(self, starlimsVarPath, exportDir):
         self.starlimsVarPath = starlimsVarPath
         self.exportDir = exportDir
-        self.batchNo = re.findall('(?<=_)[0-9]{4}(?=_)',starlimsVarPath)[0]
+        self.batchNo = re.findall('[0-9]{7}', starlimsVarPath)[0]
+
+        # set name of export file
+        theDate = datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.exportName = f"{self.batchNo}_{theDate}_regex.csv"
+        self.fullExportPath = self.exportDir + self.exportName
 
         self.runPandas()
 
@@ -24,6 +29,8 @@ class VariantRegex():
             'Report variant?':'reportVar'}, inplace=True)
         sample_ids = list(x for x in df['Folder number'] if x.startswith("EX"))
 
+        df.head()
+
         # System functions
 
         def export_csv(outdir, outname):
@@ -33,25 +40,23 @@ class VariantRegex():
             fullname = os.path.join(outdir, outname)
             df.to_csv(fullname)
 
+        # Variant calling functions
+
         # AminoAcid - Add more code to give the final nomenclature
         # (e.g. replace =, * with ref amino acid and Ter)
         def amino_acid(string):
             amino_acid = str(re.findall("[a-zA-Z]{3}[0-9]+[\_]*[a-zA-Z]*[0-9]*[\=*]*|[?*]", string))
             amino_acid = amino_acid.strip("[]''")
-            amino_acid = amino_acid.replace("*", "Ter")
             amino_acid = amino_acid.replace("=", amino_acid[:3])
+            try:
+                aa_fs = amino_acid.index("fs*")
+                amino_acid = amino_acid.replace(amino_acid[aa_fs-3:aa_fs+3], "fs")
+            except Exception as e:
+                print("amino_acid error", e)
+                pass
+            amino_acid = amino_acid.replace("*", "Ter")
             return amino_acid
 
-        # Accession number
-        df['AccessionNo'] = df['cDNA nomenclature'].apply(lambda x: re.split("\:", str(x), 1)[0])
-        # cDNA
-        df['cDNANo'] = df['cDNA nomenclature'].apply(lambda x: str(re.findall("[^c\.][0-9]+[+-_]*[0-9]+", str(x))[-1:]).strip("[]''"))
-        # AminoAccid
-        df['AminoNo'] = df['Protein nomenclature'].apply(lambda x: amino_acid(str(x)))
-        # Genomic
-        df['GenomicNo'] = df['Genomic nomenclature'].apply(lambda x: str(re.findall("[0-9]+[\-]*[0-9]*", str(x))[-1:]).strip("[]''"))
-
-        # Functions
         def gene_name(gene):
             return re.split("\_", str(gene), 1)[0]
 
@@ -160,9 +165,13 @@ class VariantRegex():
                 pass
 
             # determine if cDNA or genomic nomenclature should be used
-            if (nucleotide == "" and amino == "") and reportVar != "No variant detected":
-                genomic = genomic.split("-")
-                nucleotide = genomic[0] + "_" + genomic[1]
+            try:
+                if (nucleotide == "" and amino == "") and reportVar != "No variant detected":
+                    genomic = genomic.split("_")
+                    nucleotide = genomic[0] + "_" + genomic[1]
+            except Exception as e:
+                print("mutsurveyor genomic error", e)
+                pass
 
             # final mutation surveyor output
             if varType == "sub":
@@ -181,9 +190,9 @@ class VariantRegex():
             # insertions
             elif varType == "ins":
                 if genotype == "0/1":
-                    return f"c.[{nucleotide}_hetins{insBases}"
+                    return f"c.{nucleotide}_hetins{insBases}"
                 elif genotype == "1/1":
-                    return f"c.[{nucleotide}_ins{insBases}"
+                    return f"c.{nucleotide}_ins{insBases}"
             # delins
             elif varType == "delins":
                 if genotype == "0/1":
@@ -197,17 +206,21 @@ class VariantRegex():
                 elif zygosity(genotype) == "1/1":
                     return f"c.{nucleotide}_{varType}"
 
-
+        # Accession number
+        df['AccessionNo'] = df['cDNA nomenclature'].apply(lambda x: re.split("\:", str(x), 1)[0])
+        # cDNA
+        df['cDNANo'] = df['cDNA nomenclature'].apply(lambda x: str(re.findall("[^c\.][0-9]+[+-_]*[0-9]+", str(x))[-1:]).strip("[]''"))
+        # AminoAcid
+        df['AminoNo'] = df['Protein nomenclature'].apply(lambda x: amino_acid(str(x)))
+        # Genomic
+        df['GenomicNo'] = df['Genomic nomenclature'].apply(lambda x: str(re.findall("[0-9]+[\-_]*[0-9]*", str(x))[-1:]).strip("[]''"))
+        # Create variant nomenclature for mutation details field
         df['MutDetails'] = df.apply(lambda x: mutation_details(x.Chromosome, x.Gene, x.Exon, x.Intron, x.AminoNo, x.cDNANo, x.Ref, x.Alt, x.GenomicNo, x.Genotype, x.varType, x.insBases), axis=1)
-
+        # Create variant nomenclature to be used to create 'custom report' file
         df['MutSurveyor'] = df.apply(lambda x: mut_surveyor(x.reportVar, x.Chromosome, x.Genotype, x.AminoNo, x.cDNANo, x.GenomicNo, x.Ref, x.Alt, x.insBases, x.varType), axis=1)
 
+        # Remove any control samples
         df = df[df['Folder number'].str.startswith("EX")]
 
-        # set name of export file
-        theDate = datetime.now().strftime("%Y%m%d-%H%M%S")
-        exportName = f"{self.batchNo}_{theDate}_regex.csv"
-
-        self.fullExportPath = self.exportDir + exportName
-
-        export_csv(self.exportDir, exportName)
+        #export csv
+        export_csv(self.exportDir, self.exportName)

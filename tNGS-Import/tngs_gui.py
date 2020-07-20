@@ -40,6 +40,9 @@ class Window(QDialog):
         self.groupTitle.setLayout(gridHeader)
 
     def body(self):
+        ngs_fPath = r"C:\Users\bhsbu\Desktop\2020-07-14_2004549_variants.14-07-2020_STARLiMS_import.csv"
+        star_fPath = r"C:\Users\bhsbu\Desktop\PL2000003-02-01.txt"
+
         self.groupNGS = QGroupBox("Select tNGS 'Starlims Import' file")
         self.groupStarlims = QGroupBox("Select Starlims workbatch load file")
         gridNGS = QGridLayout()
@@ -47,11 +50,13 @@ class Window(QDialog):
 
         # Starlims Import file path
         self.txt_ngsPath = QLineEdit(self)
+        self.txt_ngsPath.setText(ngs_fPath)
         self.btn_ngsPath = QPushButton("tNGS variant file")
         self.btn_ngsPath.clicked.connect(lambda: self.get_filePath(self.txt_ngsPath))
 
         # Starlims load file file path
         self.txt_starPath = QLineEdit(self)
+        self.txt_starPath.setText(star_fPath)
         self.btn_starPath = QPushButton("Starlims load file")
         self.btn_starPath.clicked.connect(lambda: self.get_filePath(self.txt_starPath))
 
@@ -111,7 +116,6 @@ class Window(QDialog):
         self.msgbox("Information", "Processing...")
         cwd = os.path.split(os.path.abspath(self.txt_ngsPath.text()))[0]
         outDir = cwd + "\\tNGS Import Files\\"
-
         try:
             regex = VariantRegex(self.txt_ngsPath.text(), outDir)
         except:
@@ -120,7 +124,8 @@ class Window(QDialog):
 
         try:
             imp = Import(regex.fullExportPath,self.txt_starPath.text(),outDir)
-        except:
+        except Exception as e:
+            print(e)
             self.msgbox("Error", "Something went wrong generating the variant details file")
             self.reset_form()
 
