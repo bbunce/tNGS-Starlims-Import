@@ -4,7 +4,8 @@ import os
 from datetime import datetime
 import re
 
-class VariantRegex():
+
+class VariantRegex:
 
     def __init__(self, starlimsVarPath, exportDir):
         self.starlimsVarPath = starlimsVarPath
@@ -20,13 +21,14 @@ class VariantRegex():
 
     def runPandas(self):
         # df_all = pd.read_csv('../data/tNGS_import.csv')
-        df_all = pd.read_csv(self.starlimsVarPath)
+        #df_all = pd.read_csv(self.starlimsVarPath, error_bad_lines=False, encoding="ISO-8859-1")
+        df_all = pd.read_excel(self.starlimsVarPath)
 
         # Get ride of unwanted columns and create a new df
-        df = df_all.iloc[:,:23].copy()
-        df.rename(columns={'WT nucleotides':'Ref', 'Variant nucleotides':'Alt', \
-            'Variant type':'varType', 'Inserted nucleotides':'insBases', \
-            'Report variant?':'reportVar'}, inplace=True)
+        df = df_all.iloc[:, :23].copy()
+        df.rename(columns={'WT nucleotides': 'Ref', 'Variant nucleotides': 'Alt', \
+                           'Variant type': 'varType', 'Inserted nucleotides': 'insBases', \
+                           'Report variant?': 'reportVar'}, inplace=True)
         sample_ids = list(x for x in df['Folder number'] if x.startswith("EX"))
 
         df.head()
@@ -50,7 +52,7 @@ class VariantRegex():
             amino_acid = amino_acid.replace("=", amino_acid[:3])
             try:
                 aa_fs = amino_acid.index("fs*")
-                amino_acid = amino_acid.replace(amino_acid[aa_fs-3:aa_fs+3], "fs")
+                amino_acid = amino_acid.replace(amino_acid[aa_fs - 3:aa_fs + 3], "fs")
             except Exception as e:
                 print("amino_acid error", e)
                 pass
@@ -61,30 +63,29 @@ class VariantRegex():
             return re.split("\_", str(gene), 1)[0]
 
         def single_amino_code(aa3):
-            aa_dict = {'Ala': 'A', 'Arg': 'R', 'Asn': 'N', 'Asp': 'D', 'Cys':'C', \
-                'Glu':'E','Gln':'Q', 'Gly':'G', 'His':'H', 'Ile':'I','Leu':'L', \
-                'Lys':'K','Met':'M','Phe':'F','Pro':'P','Ser':'S','Thr':'T', \
-                'Trp':'W','Tyr':'Y','Val':'V', 'Ter':'X','?':'?'}
+            aa_dict = {'Ala': 'A', 'Arg': 'R', 'Asn': 'N', 'Asp': 'D', 'Cys': 'C', \
+                       'Glu': 'E', 'Gln': 'Q', 'Gly': 'G', 'His': 'H', 'Ile': 'I', 'Leu': 'L', \
+                       'Lys': 'K', 'Met': 'M', 'Phe': 'F', 'Pro': 'P', 'Ser': 'S', 'Thr': 'T', \
+                       'Trp': 'W', 'Tyr': 'Y', 'Val': 'V', 'Ter': 'X', '?': '?'}
             return aa_dict[aa3]
 
         # need to do something with non-classic zygosity variants
         def zygosity(genotype):
             try:
                 genotype = float(genotype)
-                if (genotype >= 0.4 and genotype <= 0.7) or (genotype >=1.4 and genotype <= 1.6):
+                if (genotype >= 0.4 and genotype <= 0.7) or (genotype >= 1.4 and genotype <= 1.6):
                     return "0/1"
-                elif genotype <=0.1:
+                elif genotype <= 0.1:
                     return "1/1"
                 else:
                     return genotype
             except:
                 return genotype
 
-
         def get_exons(gene):
             try:
                 gene = gene.split(",")
-                exons = [re.findall("_[0-9]+", x)[0].replace("_","") for x in gene]
+                exons = [re.findall("_[0-9]+", x)[0].replace("_", "") for x in gene]
             except:
                 return gene
 
@@ -92,7 +93,6 @@ class VariantRegex():
                 return int(exons[0])
             else:
                 return exons[0] + "-" + exons[-1]
-
 
         def variant_type(varType, insBases):
             if varType == "duplication":
@@ -105,7 +105,6 @@ class VariantRegex():
                 return "delins" + insBases
             else:
                 return ""
-
 
         def mutation_details(chrom, gene, exon, intron, amino, cdna, ref, alt, genomic, genotype, varType, insBases):
             if pd.isnull(intron):
@@ -146,7 +145,6 @@ class VariantRegex():
             elif genotype == "1/1":
                 return f"{gene} {coding}{ex_int} p.{amino}/{amino} {nucleotide}/{nucleotide[2:]}"
 
-
         def mut_surveyor(reportVar, chrom, genotype, amino, nucleotide, genomic, ref, alt, insBases, varType):
             if chrom == "X":
                 genotype = "1/1"
@@ -154,7 +152,7 @@ class VariantRegex():
                 genotype = zygosity(genotype)
 
             try:
-                if len(varType) != 6: varType = varType[:3] # need to check cases of delins
+                if len(varType) != 6: varType = varType[:3]  # need to check cases of delins
             except:
                 pass
 
@@ -177,13 +175,14 @@ class VariantRegex():
             if varType == "sub":
                 if genotype == "0/1":
                     try:
-                        amino = single_amino_code(amino_sep[0])+amino_sep[1]+single_amino_code(amino_sep[0])+single_amino_code(amino_sep[2])
+                        amino = single_amino_code(amino_sep[0]) + amino_sep[1] + single_amino_code(
+                            amino_sep[0]) + single_amino_code(amino_sep[2])
                         return f"c.[{nucleotide}{ref}>{alt}]+[=],p.{amino}"
                     except:
                         return f"c.[{nucleotide}{ref}>{alt}]+[=],p.{amino}"
                 elif genotype == "1/1":
                     try:
-                        amino = single_amino_code(amino_sep[0])+amino_sep[1]+single_amino_code(amino_sep[2])
+                        amino = single_amino_code(amino_sep[0]) + amino_sep[1] + single_amino_code(amino_sep[2])
                         return f"c.[{nucleotide}{ref}>{alt}]+[{nucleotide}{ref}>{alt}],p.{amino}"
                     except:
                         return f"c.[{nucleotide}{ref}>{alt}]+[{nucleotide}{ref}>{alt}],p.{amino}"
@@ -199,7 +198,7 @@ class VariantRegex():
                     return f"c.[{nucleotide}_hetdelins{insBases}"
                 elif genotype == "1/1":
                     return f"c.[{nucleotide}_delins{insBases}"
-            #structural variants
+            # structural variants
             elif varType == "del" or varType == "dup":
                 if zygosity(genotype) == "0/1":
                     return f"c.{nucleotide}_het{varType}"
@@ -209,18 +208,24 @@ class VariantRegex():
         # Accession number
         df['AccessionNo'] = df['cDNA nomenclature'].apply(lambda x: re.split("\:", str(x), 1)[0])
         # cDNA
-        df['cDNANo'] = df['cDNA nomenclature'].apply(lambda x: str(re.findall("[^c\.][0-9]+[+-_]*[0-9]+", str(x))[-1:]).strip("[]''"))
+        df['cDNANo'] = df['cDNA nomenclature'].apply(
+            lambda x: str(re.findall("[^c\.][0-9]+[+-_]*[0-9]+", str(x))[-1:]).strip("[]''"))
         # AminoAcid
         df['AminoNo'] = df['Protein nomenclature'].apply(lambda x: amino_acid(str(x)))
         # Genomic
-        df['GenomicNo'] = df['Genomic nomenclature'].apply(lambda x: str(re.findall("[0-9]+[\-_]*[0-9]*", str(x))[-1:]).strip("[]''"))
+        df['GenomicNo'] = df['Genomic nomenclature'].apply(
+            lambda x: str(re.findall("[0-9]+[\-_]*[0-9]*", str(x))[-1:]).strip("[]''"))
         # Create variant nomenclature for mutation details field
-        df['MutDetails'] = df.apply(lambda x: mutation_details(x.Chromosome, x.Gene, x.Exon, x.Intron, x.AminoNo, x.cDNANo, x.Ref, x.Alt, x.GenomicNo, x.Genotype, x.varType, x.insBases), axis=1)
+        df['MutDetails'] = df.apply(
+            lambda x: mutation_details(x.Chromosome, x.Gene, x.Exon, x.Intron, x.AminoNo, x.cDNANo, x.Ref, x.Alt,
+                                       x.GenomicNo, x.Genotype, x.varType, x.insBases), axis=1)
         # Create variant nomenclature to be used to create 'custom report' file
-        df['MutSurveyor'] = df.apply(lambda x: mut_surveyor(x.reportVar, x.Chromosome, x.Genotype, x.AminoNo, x.cDNANo, x.GenomicNo, x.Ref, x.Alt, x.insBases, x.varType), axis=1)
+        df['MutSurveyor'] = df.apply(
+            lambda x: mut_surveyor(x.reportVar, x.Chromosome, x.Genotype, x.AminoNo, x.cDNANo, x.GenomicNo, x.Ref,
+                                   x.Alt, x.insBases, x.varType), axis=1)
 
         # Remove any control samples
         df = df[df['Folder number'].str.startswith("EX")]
 
-        #export csv
+        # export csv
         export_csv(self.exportDir, self.exportName)

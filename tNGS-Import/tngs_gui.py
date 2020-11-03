@@ -12,7 +12,7 @@ class Window(QDialog):
         super().__init__()
         self.setWindowTitle("tNGS Starlims Import")
         self.setGeometry(50,50, 500, 300)
-        self.setWindowIcon(QtGui.QIcon("../images/exeterlogo-small.png"))
+        # self.setWindowIcon(QtGui.QIcon("../images/exeterlogo-small.png"))
         self.UI()
 
     def UI(self):
@@ -40,8 +40,8 @@ class Window(QDialog):
         self.groupTitle.setLayout(gridHeader)
 
     def body(self):
-        ngs_fPath = r"C:\Users\bhsbu\Desktop\2020-07-14_2004549_variants.14-07-2020_STARLiMS_import.csv"
-        star_fPath = r"C:\Users\bhsbu\Desktop\PL2000003-02-01.txt"
+        ngs_fPath = r"C:/Users/bhsbu/dev/Work/tNGS-Starlims-Import/data/2007438 20201103/2020-10-30_2007165_variants.30-10-2020_STARLiMS_import.xlsx"
+        star_fPath = r"C:/Users/bhsbu/dev/Work/tNGS-Starlims-Import/data/2007438 20201103/PL2007438-01-01.txt"
 
         self.groupNGS = QGroupBox("Select tNGS 'Starlims Import' file")
         self.groupStarlims = QGroupBox("Select Starlims workbatch load file")
@@ -113,20 +113,21 @@ class Window(QDialog):
         self.msgbox("Information", "Form reset")
 
     def run(self):
-        self.msgbox("Information", "Processing...")
+        #self.msgbox("Information", "Processing...")
         cwd = os.path.split(os.path.abspath(self.txt_ngsPath.text()))[0]
         outDir = cwd + "\\tNGS Import Files\\"
+
         try:
             regex = VariantRegex(self.txt_ngsPath.text(), outDir)
-        except:
-            self.msgbox("Error", "Something went wrong generating the custom report")
-            pass
+        except Exception as e:
+            self.msgbox("Intitate regex class error:", str(e))
+            #self.reset_form()
+            return None
 
         try:
             imp = Import(regex.fullExportPath,self.txt_starPath.text(),outDir)
         except Exception as e:
-            print(e)
-            self.msgbox("Error", "Something went wrong generating the variant details file")
+            self.msgbox("Intitate import class error:", str(e))
             self.reset_form()
 
     def exit(self):
