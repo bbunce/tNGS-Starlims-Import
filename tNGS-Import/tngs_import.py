@@ -4,6 +4,8 @@ from datetime import datetime
 
 class Import():
 
+    #todo add tNGS and Starlims workbatch numbers to all the saved filenames
+
     def __init__(self, regexFile, seqLoadFile, outDir):
         self.regexFile = regexFile
         self.seqLoadFile = seqLoadFile
@@ -14,26 +16,33 @@ class Import():
 
     def runPandas(self):
         tngs = pd.read_csv(self.regexFile)
-        seq = pd.read_csv(self.seqLoadFile, delimiter="\t")
+        seq = pd.read_csv(self.seqLoadFile)
+        seq.set_index('Well')
 
-        seq.columns = [c.replace(' ', '_') for c in seq.columns]
         tngs.columns = [c.replace(' ', '_') for c in tngs.columns]
 
+        '''
+        seq.columns = [c.replace(' ', '_') for c in seq.columns]
         # Starlims sequencing'NGS' workbatch number
         workbatchNo = seq['Container_Name'][0]
         # Remove unwanted columns
         seq = seq.iloc[4:,:2].copy()
         # rename seq columns
-        seq.columns = ["Well", "ID"]
-
-        # Get starlims 'amplicon'
-        star_amplicon = workbatchNo
-
+        
+        
         # need to get a dictionary of all sample ID from sequencing load file as that represents what can get
         # imported back into Starlims. Mostly important for the ddPCR mutation details import
-        samples = list(seq['ID'].unique())
+        
         del samples[:4]
         samples = [sample[:9] for sample in samples]
+        '''
+        #seq.columns = ["Well", "ID"]
+        samples = list(x[:9] for x in seq['Folder number'].unique())
+        instrument_id = list(seq['Analyte'].unique())
+        sample_instr = dict(zip(samples, instrument_id))
+
+        # Get starlims 'amplicon'
+        #star_amplicon = workbatchNo
 
         # new column with sample id and mutsurveyor variant
         tngs['id_variant'] = tngs['Folder_number'] + "_" + tngs['MutSurveyor']
@@ -61,11 +70,11 @@ class Import():
         # create custom report template
         def create_custom_report():
             f = open(f'{self.outDir}Starlims_custom_report_{self.theDate}.txt', 'w+')
-            header = "Warning!\nSample Name\tReference Name\tLane Quality\tROI Coverage\t#nts below threshold\tQuality ROI\tVariant1\tVariant3\tVariant3\tVariant4\n"
+            header = "Sample Name\tReference Name\tLane Quality\tROI Coverage\t#nts below threshold\tQuality ROI\tVariant1\tVariant2\tVariant3\tVariant4\n"
             body = ""
             for sample in sample_vars:
                 no_vars = len(sample_vars[sample])
-                sample_id = sample + star_amplicon + workbatchNo
+                sample_id = sample_instr[sample]
                 if no_vars == 1:
                     body += f"{sample_id}\t\t\t\t\t\t{sample_vars[sample][0]}\n"
                 elif no_vars == 2:
@@ -85,7 +94,7 @@ class Import():
         # Create Well-Sample dictionary {well:Sample} from seq.csv
         well_sample = {}
         well = list(seq['Well'].unique())
-        seqID = [x[:9] for x in list(seq['ID'].unique())]
+        seqID = [x[:9] for x in list(seq['Folder number'].unique())]
         for w, s in zip(well, seqID):
             well_sample[w] = s
 
@@ -114,21 +123,28 @@ class Import():
         # create variant_details import
         def create_variant_import():
             f = open(f'{self.outDir}Starlims_variant_details_{self.theDate}.csv', 'w+')
-            header = "Well,Sample,Variant1,Genomic1,Variant2,Genomic2,Variant3,Genomic3\n"
+            header = "Well,Sample,VariantDetails,GenomicVar1,GenomicVar2\n"
             body = ""
             for sample in seq_mut:
                 no_vars = len(seq_mut[sample][1])
                 try:
+                    gVar1 = seq_mut[sample][2][0]
+                    gVar2 = seq_mut[sample][2][1]
+                    if gVar1 > 30:
+                        gVar1 = "len > 30"
+                    if gVar2 > 30:
+                        gVar2 = "len > 30"
+
                     if len(seq_mut[sample][2]) == 0:
-                        body += f"{seq_mut[sample][0][0]},{sample},,,,,,\n"
+                        body += f"{seq_mut[sample][0][0]},{sample}\n"
                     elif no_vars == 1:
-                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},,,,\n"
+                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{gVar1}\n"
                     elif no_vars == 2:
-                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},{seq_mut[sample][1][1]},{seq_mut[sample][2][1]},,\n"
-                    elif no_vars == 3:
-                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]},{seq_mut[sample][2][0]},{seq_mut[sample][1][1]},{seq_mut[sample][2][1]},{seq_mut[sample][1][2]},{seq_mut[sample][2][2]}\n"
+                        body += f"{seq_mut[sample][0][0]},{sample},{seq_mut[sample][1][0]}. {seq_mut[sample][1][1]},{gVar1}, {gVar2}\n"
+                    elif no_vars >= 3:
+                        body += f"{seq_mut[sample][0][0]},{sample},3 or more variants\n"
                     else:
-                        body += f"{seq_mut[sample][0][0]},{sample},,,,,,\n"
+                        body += f"{seq_mut[sample][0][0]},{sample}\n"
                 except:
                     self.variant_error = "Variant error"
                     pass
@@ -136,5 +152,5 @@ class Import():
             f.write(header)
             f.write(body)
             f.close()
-
+        #todo add accession number column for starlims
         create_variant_import()
