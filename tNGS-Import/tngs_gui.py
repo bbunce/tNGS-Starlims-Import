@@ -40,8 +40,8 @@ class Window(QDialog):
         self.groupTitle.setLayout(gridHeader)
 
     def body(self):
-        ngs_fPath = r"C:/Users/bhsbu/dev/Work/tNGS-Starlims-Import/data/2007438 20201103/2020-10-30_2007165_variants.30-10-2020_STARLiMS_import.xlsx"
-        star_fPath = r"C:/Users/bhsbu/dev/Work/tNGS-Starlims-Import/data/2007438 20201103/PL2007438-01-01.txt"
+        ngs_fPath = "Select file (.xls)"
+        star_fPath = "Select file (.csv)"
 
         self.groupNGS = QGroupBox("Select tNGS 'Starlims Import' file")
         self.groupStarlims = QGroupBox("Select Starlims workbatch load file")
@@ -128,7 +128,8 @@ class Window(QDialog):
             imp = Import(regex.fullExportPath,self.txt_starPath.text(),outDir)
         except Exception as e:
             self.msgbox("Intitate import class error:", str(e))
-            self.reset_form()
+            #self.reset_form()
+            return None
 
     def exit(self):
         sys.exit()
