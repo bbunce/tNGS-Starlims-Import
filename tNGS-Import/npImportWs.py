@@ -3,7 +3,7 @@ from datetime import datetime
 import os
 from npVariant import Variant
 
-class Regex:
+class ImportWorksheet:
 
     def __init__(self, varPath, varID, workDir):
         self.varPath = varPath
@@ -14,8 +14,7 @@ class Regex:
         self.wb = self.createCopy()
         self.ws_main = self.wb.get_sheet_by_name("STARLiMS_import")
         self.ws = self.createWorksheets()
-
-        self.test()
+        self.ws_main_noRows = self.ws_main.max_row
 
     def createCopy(self):
         openpyxl.load_workbook(self.varPath).save(self.newWbName)
@@ -40,11 +39,12 @@ class Regex:
         self.wb.save(self.newWbName)
         return {'ms': ws_ms, 'var': ws_var}
 
-    def test(self):
-        var1 = Variant(self.ws_main, 21)
-        var2 = Variant(self.ws_main, 31)
-        var3 = Variant(self.ws_main, 32)
-        var4 = Variant(self.ws_main, 34)
+    def write_variantDetails(self):
+        pass
+
+    def write_mutationSurvetor(self):
+        pass
+
 
 
 
