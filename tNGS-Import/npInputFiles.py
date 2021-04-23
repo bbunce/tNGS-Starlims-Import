@@ -20,6 +20,7 @@ class InputFiles():
         csv_reader = list(csv.reader(csv_file, delimiter="\t"))
         for row in range(5, len(csv_reader)):
             samples[csv_reader[row][1][:9]] = [csv_reader[row][0], csv_reader[row][1]]
+        csv_file.close()
         return samples
 
 
