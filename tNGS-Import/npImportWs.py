@@ -1,16 +1,16 @@
 import openpyxl
 from datetime import datetime
 import csv
-import os
 
 class ImportWorksheet:
 
-    def __init__(self, varPath, varID, workDir):
+    def __init__(self, varPath, varID, starID, workDir):
         self.varPath = varPath
         self.varID = varID
+        self.starID = starID
         self.workDir = workDir
         self.timeNow = datetime.now().strftime("%Y-%m-%d %H%M")
-        self.newWbName = f"{self.workDir}{self.varID} regex {self.timeNow}.xlsx"
+        self.newWbName = f"{self.workDir}{self.varID}_{self.starID} tNGS-StarImp {self.timeNow}.xlsx"
         self.wb = self.createCopy()
         self.ws_main = self.wb.get_sheet_by_name("STARLiMS_import")
         self.ws_main_noRows = self.ws_main.max_row
@@ -46,6 +46,7 @@ class ImportWorksheet:
                    'Trp': 'W', 'Tyr': 'Y', 'Val': 'V', 'Ter': 'X', '?': '?'}
         return aa_dict[aa3]
 
+    #todo add in final results field e.g. Mutation detected, no variant, etc
     def write_variantDetails(self, sample_var):
         ws_var = self.wb.get_sheet_by_name("VariantDetails")
         for i, sample in enumerate(sample_var):
@@ -57,13 +58,17 @@ class ImportWorksheet:
             for x in range(2, len(sample_var[sample])):
                 sampleInfo = sample_var[sample][x]
                 if sampleInfo.variantPresent is True and sampleInfo.confirmationRqd is False:
-                    variant += f"{sampleInfo.gene} {sampleInfo.genotype[:3]} " \
+                    if sampleInfo.genotype[:3] == "Hem":
+                        genotype = "Hem/Hom"
+                    else:
+                        genotype = sampleInfo.genotype[:3]
+                    variant += f"{sampleInfo.gene} {genotype} " \
                                f"p.{sampleInfo.pNom} c.{sampleInfo.cNom['cFull']}; "
                     ws_var.cell(row=i + 2, column=col_count).value = sampleInfo.gene
                     ws_var.cell(row=i + 2, column=col_count + 1).value = sampleInfo.genotype
                     ws_var.cell(row=i + 2, column=col_count + 2).value = "Maternal/Paternal/Biparental/De novo"
                     ws_var.cell(row=i + 2, column=col_count + 3).value = \
-                        f"{sampleInfo.transcript}:c.{sampleInfo.cNom['cFull']}, p.{sampleInfo.pNom}"
+                        f"{sampleInfo.transcript}:c.{sampleInfo.cNom['cFull']} p.{sampleInfo.pNom}"
                     ws_var.cell(row=i + 2, column=col_count + 4).value = \
                         f"Chr{sampleInfo.chr}(GRCh37):g.{sampleInfo.gNom['gFull']}"
                     ws_var.cell(row=i + 2, column=col_count + 5).value = sampleInfo.variantStatus
@@ -96,7 +101,7 @@ class ImportWorksheet:
 
     def to_csv(self, sheet):
         ws = self.wb.get_sheet_by_name(sheet)
-        with open(f"{self.workDir}{self.varID} {sheet} {self.timeNow}.csv", 'w', newline='') as f:
+        with open(f"{self.workDir}{self.varID}_{self.starID} {sheet} {self.timeNow}.csv", 'w', newline='') as f:
             c = csv.writer(f)
             for r in ws.rows:
                 c.writerow([cell.value for cell in r])

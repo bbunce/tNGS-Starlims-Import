@@ -1,4 +1,3 @@
-import openpyxl
 import re
 
 class Variant:
@@ -50,7 +49,7 @@ class Variant:
 
         # todo look in detail re: mitochondrial gene formats
         # if self.chr != 'X' or self.chr != 'Y' or not self.gene.startswith('mt'):
-        if self.chr != 'X' or self.chr != 'Y':
+        if self.chr != 'X': #autosomal gene
             if isinstance(genotype, str):
                 if genotype == "0/1":
                     return "Heterozygous"
@@ -61,13 +60,26 @@ class Variant:
                     return "Heterozygous"
                 if (genotype >= 0.9 and genotype <= 1.1):
                     return "Homozygous"
+        elif self.chr == 'X':
+            if isinstance(genotype, str):
+                if genotype == "0/1":
+                    return "Heterozygous"
+                if genotype == "1/1":
+                    return "Hemizygous/Homozygous"
+            else:
+                if (genotype >= 0.45 and genotype <= 0.55):
+                    return "Heterozygous"
+                if (genotype >= 0.9 and genotype <= 1.1):
+                    return "Hemizygous/Homozygous"
+        elif self.chr == 'Y':
+            return "Hemizygous"
             # elif (self.chr == 'X' or self.chr == 'Y') and self.gender == 'male':
             #     if genotype == "1/1" or (genotype >= 0.9 and genotype <= 1.1):
             #         return "Hemizygous"
             # elif self.gene.startswith('mt'):
             #     return "Heteroplasmic level?"
         else:
-            return "Check Gender/Hemizygous"
+            return "Check genotype"
 
     def get_gNom(self):
         gNom = {"gStart": "", "gEnd": "", "gFull": ""}
