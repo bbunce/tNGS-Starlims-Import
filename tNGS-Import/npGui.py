@@ -4,7 +4,6 @@ from PyQt5 import QtCore
 from npInputFiles import InputFiles
 from npImportWs import ImportWorksheet
 from npVariant import Variant
-import openpyxl
 import sys
 import os
 
@@ -42,8 +41,8 @@ class Window(QDialog):
         self.groupTitle.setLayout(gridHeader)
 
     def body(self):
-        ngs_fPath = r"C:\Users\bhsbu\dev\Work\tNGS-Starlims-Import\data\2020-07-14_2004549_variants.14-07-2020_STARLiMS_import.xlsx"
-        star_fPath = r"C:\Users\bhsbu\dev\Work\tNGS-Starlims-Import\data\PL2000003-02-01.txt"
+        ngs_fPath = "Select file..."
+        star_fPath = "Select file..."
 
         self.groupNGS = QGroupBox("Select tNGS 'Starlims Import' file")
         self.groupStarlims = QGroupBox("Select Starlims workbatch load file")
@@ -126,7 +125,7 @@ class Window(QDialog):
             except FileExistsError:
                 pass
 
-            importWs = ImportWorksheet(self.txt_ngsPath.text(), inputFiles.tngsID, workDir)
+            importWs = ImportWorksheet(self.txt_ngsPath.text(), inputFiles.tngsID, inputFiles.starID, workDir)
 
             # loop through variants in varPath and assign to sample_var dictionary
             sample_var = inputFiles.starSamples
@@ -140,7 +139,7 @@ class Window(QDialog):
 
         except Exception as e:
             self.msgbox("Run Error:", str(e))
-            #self.reset_form()
+            self.reset_form()
             return None
         self.msgbox("Information", "Complete")
 
