@@ -24,6 +24,7 @@ class Variant:
             self.intron = self.ws_main.cell(row=self.row, column=43).value
             self.cNom = self.get_cNom()
             self.pNom = self.amino_acid()
+            self.insNucleotides = self.ws_main.cell(row=self.row, column=19).value
         elif self.ws_main.cell(row=self.row, column=4).value != None and \
                 self.ws_main.cell(row=self.row, column=5).value == None:
             self.gene = self.get_gene()
