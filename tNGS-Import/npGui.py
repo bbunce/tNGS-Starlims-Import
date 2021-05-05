@@ -44,7 +44,7 @@ class Window(QDialog):
         ngs_fPath = "Select file..."
         star_fPath = "Select file..."
 
-        self.groupNGS = QGroupBox("Select tNGS 'Starlims Import' file")
+        self.groupNGS = QGroupBox("Select tNGS 'Summary' file")
         self.groupStarlims = QGroupBox("Select Starlims workbatch load file")
         gridNGS = QGridLayout()
         gridStarlims = QGridLayout()
@@ -108,8 +108,8 @@ class Window(QDialog):
             textbox.setText(fileName)
 
     def reset_form(self):
-        self.txt_ngsPath.setText("")
-        self.txt_starPath.setText("")
+        self.txt_ngsPath.setText("Select file...")
+        self.txt_starPath.setText("Select file...")
         self.setStyleSheet(f"background-color: none;")
         self.msgbox("Information", "Form reset")
 
@@ -137,11 +137,16 @@ class Window(QDialog):
             # write variants to variantDetails tab
             importWs.write_variantDetails(sample_var)
 
+            # write variant to mutationsurveyor tab
+            importWs.write_mutationSurveyor(sample_var)
+
         except Exception as e:
             self.msgbox("Run Error:", str(e))
-            self.reset_form()
+            # self.reset_form()
             return None
-        self.msgbox("Information", "Complete")
+        self.msgbox("User reminder", "Please check X-linked gene zygosity calls and any mitochondiral variant "
+                    + "nomenclature")
+        self.msgbox("Information", "\tComplete\t\t")
 
     def exit(self):
         sys.exit()
