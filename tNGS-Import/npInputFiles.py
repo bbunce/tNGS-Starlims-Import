@@ -8,9 +8,9 @@ class InputFiles():
         self.starPath = starPath
         self.starID = re.findall("[0-9]{7}", self.starPath)[0]
         try:
-            self.tngsID = re.findall("[0-9]{7}", self.varPath)[0]
+            self.tngsID = re.findall("[0-9]{7}|_[0-9]{4}_", self.varPath)[0].replace("_", "")
         except:
-            print('No 7 digit id detected')
+            print('No 4 or 7 digit id detected')
         self.starSamples = self.get_well_sample_instrIDs()
         self.noSamples = len(self.starSamples)
 
