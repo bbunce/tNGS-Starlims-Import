@@ -116,6 +116,7 @@ class ImportWorksheet:
                 amino = re.findall("[a-zA-Z]{3}", sampleInfo.pNom)
                 resNo = re.findall("[0-9]+", sampleInfo.pNom)
                 insNuc = "" if sampleInfo.insNucleotides is None else sampleInfo.insNucleotides
+                print(amino[0], resNo[0])
         except:
             amino = ["?", "?"]
             resNo = ["?"]
