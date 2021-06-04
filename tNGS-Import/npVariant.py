@@ -7,26 +7,26 @@ class Variant:
         self.row = row
         # self.gender = gender - need to figure out how to get this variable
 
-        if self.ws_main.cell(row=self.row, column=4).value != None and \
-                self.ws_main.cell(row=self.row, column=5).value != None:
+        if self.ws_main.cell(row=self.row, column=5).value != None and \
+                self.ws_main.cell(row=self.row, column=6).value != None:
             self.variantPresent = True
             self.confirmationRqd = self.get_confirmation()
-            self.codingEffect = self.ws_main.cell(row=self.row, column=9).value
-            self.variantType = self.ws_main.cell(row=self.row, column=10).value
-            self.variantLoc = self.ws_main.cell(row=self.row, column=11).value
+            self.codingEffect = self.ws_main.cell(row=self.row, column=10).value
+            self.variantType = self.ws_main.cell(row=self.row, column=11).value
+            self.variantLoc = self.ws_main.cell(row=self.row, column=12).value
             self.variantStatus = self.get_variantStatus()
-            self.chr = self.ws_main.cell(row=self.row, column=23).value
+            self.chr = self.ws_main.cell(row=self.row, column=24).value
             self.gene = self.get_gene()
             self.genotype = self.get_genotype()
             self.gNom = self.get_gNom()
-            self.transcript = self.ws_main.cell(row=self.row, column=45).value
-            self.exon = self.ws_main.cell(row=self.row, column=12).value
-            self.intron = self.ws_main.cell(row=self.row, column=43).value
+            self.transcript = self.ws_main.cell(row=self.row, column=46).value
+            self.exon = self.ws_main.cell(row=self.row, column=13).value
+            self.intron = self.ws_main.cell(row=self.row, column=14).value
             self.cNom = self.get_cNom()
             self.pNom = self.amino_acid()
-            self.insNucleotides = self.ws_main.cell(row=self.row, column=19).value
-        elif self.ws_main.cell(row=self.row, column=4).value != None and \
-                self.ws_main.cell(row=self.row, column=5).value == None:
+            self.insNucleotides = self.ws_main.cell(row=self.row, column=20).value
+        elif self.ws_main.cell(row=self.row, column=5).value != None and \
+                self.ws_main.cell(row=self.row, column=6).value == None:
             self.gene = self.get_gene()
             self.variantPresent = True
             self.confirmationRqd = self.get_confirmation()
@@ -34,7 +34,7 @@ class Variant:
             self.variantPresent = False
 
     def get_gene(self):
-        gene = self.ws_main.cell(row=self.row, column=4).value
+        gene = self.ws_main.cell(row=self.row, column=5).value
         if gene.find('_') == -1:
             return gene
         else:
@@ -42,9 +42,9 @@ class Variant:
 
     def get_genotype(self):
         try:
-            genotype = float(self.ws_main.cell(row=self.row, column=5).value)
+            genotype = float(self.ws_main.cell(row=self.row, column=6).value)
         except ValueError:
-            genotype = str(self.ws_main.cell(row=self.row, column=5).value)
+            genotype = str(self.ws_main.cell(row=self.row, column=6).value)
         except TypeError:
             return None
 
@@ -85,17 +85,17 @@ class Variant:
     def get_gNom(self):
         gNom = {"gStart": "", "gEnd": "", "gFull": ""}
         try:
-            gNom["gStart"] = self.ws_main.cell(row=self.row, column=43).value
-            gNom["gEnd"] = self.ws_main.cell(row=self.row, column=44).value
-            gNom["gFull"] = re.split(":g.", self.ws_main.cell(row=self.row, column=6).value)[1]
+            gNom["gStart"] = self.ws_main.cell(row=self.row, column=44).value
+            gNom["gEnd"] = self.ws_main.cell(row=self.row, column=45).value
+            gNom["gFull"] = re.split(":g.", self.ws_main.cell(row=self.row, column=7).value)[1]
             return gNom
         except IndexError:
-            gNom["gFull"] = re.split(":", self.ws_main.cell(row=self.row, column=6).value)[1]
+            gNom["gFull"] = re.split(":", self.ws_main.cell(row=self.row, column=7).value)[1]
             return gNom
 
     def get_cNom2(self):
         try:
-            return re.findall("[^c\.][0-9]+[+-_]*[0-9]+", self.ws_main.cell(row=self.row, column=7).value)[-1]
+            return re.findall("[^c\.][0-9]+[+-_]*[0-9]+", self.ws_main.cell(row=self.row, column=8).value)[-1]
         except:
             return None
 
@@ -103,7 +103,7 @@ class Variant:
     def get_cNom(self):
         cNom = {"cStart": "", "cEnd": "", "cFull": "", "cRef": "", "cAlt": "", "cIndel": ""}
         try:
-            cNom["cFull"] = re.split(":c.", self.ws_main.cell(row=self.row, column=7).value)[1]
+            cNom["cFull"] = re.split(":c.", self.ws_main.cell(row=self.row, column=8).value)[1]
             if cNom["cFull"].find("_") != -1:
                 cNom["cStart"] = re.findall("[0-9]+", cNom["cFull"])[0]
                 cNom["cEnd"] = re.findall("[0-9]+", cNom["cFull"])[1]
@@ -123,7 +123,7 @@ class Variant:
     # amino acid mark 2
     def amino_acid(self):
         try:
-            aminoAcid = self.ws_main.cell(row=self.row, column=8).value
+            aminoAcid = self.ws_main.cell(row=self.row, column=9).value
             amino_acid = str(re.findall("[a-zA-Z]{3}[0-9]+[\_]*[a-zA-Z]*[0-9]*[\=*]*|[?*]", aminoAcid))
             amino_acid = amino_acid.strip("[]''")
             amino_acid = amino_acid.replace("=", amino_acid[:3])
@@ -143,7 +143,7 @@ class Variant:
         if self.variantLoc == "intron":
             return "p.?"
 
-        aminoAcid = self.ws_main.cell(row=self.row, column=8).value
+        aminoAcid = self.ws_main.cell(row=self.row, column=9).value
         pNom = {"pStart": "", "pEnd": "", "pFull": "", "pRef": "", "pAlt": "", "pIndel": ""}
         pNom["pFull"] = aminoAcid[2:].replace("(", "").replace(")", "")
         if pNom["pFull"].find("_") != -1:
@@ -170,7 +170,7 @@ class Variant:
         return pNom
 
     def get_variantStatus(self):
-        status = self.ws_main.cell(row=self.row, column=2).value
+        status = self.ws_main.cell(row=self.row, column=3).value
         if status.startswith("Novel") or status == "Confirmation reqd" or status.startswith("Sanger"):
             return "Uncertain"
         elif status.startswith("Variant detected"):
@@ -179,8 +179,8 @@ class Variant:
             return status
 
     def get_confirmation(self):
-        if self.ws_main.cell(row=self.row, column=2).value.startswith("Sanger") or \
-                self.ws_main.cell(row=self.row, column=2).value.startswith("Confirm"):
+        if self.ws_main.cell(row=self.row, column=3).value.startswith("Sanger") or \
+                self.ws_main.cell(row=self.row, column=3).value.startswith("Confirm"):
             return True
         else:
             return False
