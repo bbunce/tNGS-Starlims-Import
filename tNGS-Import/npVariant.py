@@ -5,11 +5,11 @@ class Variant:
     def __init__(self, ws_main, row):
         self.ws_main = ws_main
         self.row = row
-        # self.gender = gender - need to figure out how to get this variable
 
         if self.ws_main.cell(row=self.row, column=5).value != None and \
                 self.ws_main.cell(row=self.row, column=6).value != None:
             self.variantPresent = True
+            self.gender = self.ws_main.cell(row=self.row, column=3).value.lower()
             self.confirmationRqd = self.get_confirmation()
             self.codingEffect = self.ws_main.cell(row=self.row, column=10).value
             self.variantType = self.ws_main.cell(row=self.row, column=11).value
@@ -48,9 +48,7 @@ class Variant:
         except TypeError:
             return None
 
-        # todo look in detail re: mitochondrial gene formats
-        # if self.chr != 'X' or self.chr != 'Y' or not self.gene.startswith('mt'):
-        if self.chr != 'X': #autosomal gene
+        if self.chr != 'X' or self.chr != 'Y': #autosomal gene
             if isinstance(genotype, str):
                 if genotype == "0/1":
                     return "Heterozygous"
@@ -63,22 +61,23 @@ class Variant:
                     return "Homozygous"
         elif self.chr == 'X':
             if isinstance(genotype, str):
-                if genotype == "0/1":
+                if genotype == "0/1" and self.gender == 'female':
                     return "Heterozygous"
-                if genotype == "1/1":
-                    return "Hemizygous/Homozygous"
+                if genotype == "1/1" and self.gender == 'female':
+                    return "Homozygous"
+                if genotype == "1/1" and self.gender == 'male':
+                    return "Hemizygous"
             else:
-                if (genotype >= 0.45 and genotype <= 0.55):
+                if (genotype >= 0.45 and genotype <= 0.55) and self.gender == 'female':
                     return "Heterozygous"
-                if (genotype >= 0.9 and genotype <= 1.1):
-                    return "Hemizygous/Homozygous"
+                if (genotype >= 0.9 and genotype <= 1.1) and self.gender == 'female':
+                    return "Homozygous"
+                if (genotype >= 0.9 and genotype <= 1.1) and self.gender == 'male':
+                    return "Hemizygous"
         elif self.chr == 'Y':
             return "Hemizygous"
-            # elif (self.chr == 'X' or self.chr == 'Y') and self.gender == 'male':
-            #     if genotype == "1/1" or (genotype >= 0.9 and genotype <= 1.1):
-            #         return "Hemizygous"
-            # elif self.gene.startswith('mt'):
-            #     return "Heteroplasmic level?"
+        elif self.chr == 'MT':
+            return "Heteroplasmy level?"
         else:
             return "Check genotype"
 
@@ -179,8 +178,8 @@ class Variant:
             return status
 
     def get_confirmation(self):
-        if self.ws_main.cell(row=self.row, column=3).value.startswith("Sanger") or \
-                self.ws_main.cell(row=self.row, column=3).value.startswith("Confirm"):
+        variant = self.ws_main.cell(row=self.row, column=3).value
+        if variant.lower().startswith("sanger") or variant.lower().startswith("confirm"):
             return True
         else:
             return False
