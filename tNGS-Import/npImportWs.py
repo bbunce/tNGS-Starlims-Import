@@ -73,17 +73,20 @@ class ImportWorksheet:
                             genotype = sampleInfo.genotype[:3]
                     except:
                         genotype = "?/?"
-                    variant += f"{sampleInfo.gene} {genotype} " \
-                               f"p.{sampleInfo.pNom} c.{sampleInfo.cNom['cFull']}; "
-                    ws_var.cell(row=i + 2, column=col_count).value = sampleInfo.gene
-                    ws_var.cell(row=i + 2, column=col_count + 1).value = sampleInfo.genotype
-                    ws_var.cell(row=i + 2, column=col_count + 2).value = "Maternal/Paternal/Biparental/De novo"
-                    ws_var.cell(row=i + 2, column=col_count + 3).value = \
-                        f"{sampleInfo.transcript}:c.{sampleInfo.cNom['cFull']} p.{sampleInfo.pNom}"
-                    ws_var.cell(row=i + 2, column=col_count + 4).value = \
-                        f"Chr{sampleInfo.chr}(GRCh37):g.{sampleInfo.gNom['gFull']}"
-                    ws_var.cell(row=i + 2, column=col_count + 5).value = sampleInfo.variantStatus
-                    col_count += 6
+                    try:
+                        variant += f"{sampleInfo.gene} {genotype} " \
+                                   f"p.{sampleInfo.pNom} c.{sampleInfo.cNom['cFull']}; "
+                        ws_var.cell(row=i + 2, column=col_count).value = sampleInfo.gene
+                        ws_var.cell(row=i + 2, column=col_count + 1).value = sampleInfo.genotype
+                        ws_var.cell(row=i + 2, column=col_count + 2).value = "Maternal/Paternal/Biparental/De novo"
+                        ws_var.cell(row=i + 2, column=col_count + 3).value = \
+                            f"{sampleInfo.transcript}:c.{sampleInfo.cNom['cFull']} p.{sampleInfo.pNom}"
+                        ws_var.cell(row=i + 2, column=col_count + 4).value = \
+                            f"Chr{sampleInfo.chr}(GRCh37):g.{sampleInfo.gNom['gFull']}"
+                        ws_var.cell(row=i + 2, column=col_count + 5).value = sampleInfo.variantStatus
+                        col_count += 6
+                    except:
+                        print(sample)
                 elif sampleInfo.variantPresent is True and sampleInfo.confirmationRqd is True:
                     variant += f"{sampleInfo.gene} confirmation/in-fill; "
 
